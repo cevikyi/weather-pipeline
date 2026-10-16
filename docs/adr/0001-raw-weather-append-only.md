@@ -11,7 +11,9 @@
 
 ## Decision
 
--- Day, location_id, valid_time, ingested_at
+- Raw grain: location_id × valid_time × ingested_at (append-only, her çekim yeni satır)
+- Staging grain: location_id × valid_time; her grup için max(ingested_at) olan satır tutulur
+- valid_time ve ingested_at UTC TIMESTAMP olarak saklanır; yerel güne çevirme dbt'de yapılır
 
 ## Consequences
 
