@@ -1,4 +1,7 @@
 .venv/
-
-.bruin.yml.venv/
+.bruin.yml
 .env
+target/
+logs/
+dbt_packages/
+dbt_internal_packages/

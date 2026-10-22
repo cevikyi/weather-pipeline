@@ -1,0 +1,5 @@
+sources:
+  - name: raw                 # source('raw', ...) derken kullanılan ad
+    schema: raw               # BigQuery'deki dataset adı
+    tables:
+      - name: weather_hourly  # source(..., 'weather_hourly')

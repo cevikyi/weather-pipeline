@@ -1,0 +1,10 @@
+weather:                                   # dbt_project.yml'deki profile adı
+  target: dev                              # varsayılan ortam
+  outputs:
+    dev:
+      type: bigquery                       # hangi veritabanı
+      method: oauth                        # giriş: gcloud application-default login'deki hesabın
+      database: "{{ env_var('PROJECT_ID') }}"  # GCP projesi, .env'den okunur
+      schema: dbt_dev                      # dbt'nin modelleri oluşturacağı dataset
+      location: EU                         # raw ile aynı location olmalı
+      threads: 4                           # aynı anda kaç model çalışsın
