@@ -6,3 +6,5 @@ models:
   weather:                    # yukarıdaki proje adı
     staging:                  # models/staging/ klasörü için ayar
       +materialized: view     # bu klasördeki modeller BigQuery'de VIEW olarak oluşsun
+    marts:
+      +materialized: table
