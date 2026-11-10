@@ -1,0 +1,10 @@
+models:
+  - name: daily_weather
+    columns:
+      - name: location_id
+        data_tests:
+          - not_null
+
+      - name: weather_date
+        data_tests:
+          - not_null
