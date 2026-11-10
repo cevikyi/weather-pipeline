@@ -7,4 +7,12 @@ weather:                                   # dbt_project.yml'deki profile adı
       database: "{{ env_var('PROJECT_ID') }}"  # GCP projesi, .env'den okunur
       schema: dbt_dev                      # dbt'nin modelleri oluşturacağı dataset
       location: EU                         # raw ile aynı location olmalı
-      threads: 4                           # aynı anda kaç model çalışsın
+      threads: 4
+    prod:                                  # yeni target'ın adı (--target prod)
+      type: bigquery                       # dev ile aynı
+      method: oauth                        # dev ile aynı (ders 0009'da bu değişecek)
+      database: "{{ env_var('PROJECT_ID') }}"  # aynı GCP projesi
+      schema: analytics                    # TEK FARK: prod modelleri bu dataset'e yazılır
+      location: EU                         # raw ile aynı location
+      threads: 4
+                        # aynı anda kaç model çalışsın
