@@ -10,6 +10,6 @@ select
 	count(*) as hour_count,                                -- bu gün kaç saatlik veriye dayanıyor
     count(*) = 24 as is_complete_day                       -- 24 saatin hepsi var mı? (true/false)
 
-	from {{ref('stg_weather_hourlyyy')}}
+	from {{ref('stg_weather_hourly')}}
 group by
 		location_id,weather_date
