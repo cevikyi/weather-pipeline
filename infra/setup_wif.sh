@@ -48,7 +48,7 @@ fi
 MEMBER="principalSet://iam.googleapis.com/${POOL_ID}/attribute.repository/${REPO}"
                                            # "bu pool'dan gelen, repository'si REPO olan herkes"
 
-for ROLE in roles/bigquery.jobUser roles/bigquery.dataEditor; do
+for ROLE in roles/bigquery.jobUser roles/bigquery.dataEditor roles/bigquery.readSessionUser; do
                                            # for: listedeki her rol için aşağıdakini bir kez çalıştır
   gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --member="${MEMBER}" \
