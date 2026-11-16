@@ -16,3 +16,10 @@ weather:                                   # dbt_project.yml'deki profile adı
       location: EU                         # raw ile aynı location
       threads: 4
                         # aynı anda kaç model çalışsın
+    ci:                                    # --target ci
+      type: bigquery
+      method: oauth                        # aynı! GitHub'da auth adımının girişini kullanacak
+      database: "{{ env_var('PROJECT_ID') }}"
+      schema: dbt_ci                       # PR'daki kod buraya kurulur, prod'a değil
+      location: EU
+      threads: 4

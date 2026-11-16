@@ -1,29 +1,32 @@
 name: ci
 
 on:
-
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
+  id-token: write                          # GitHub'dan OIDC kimlik kartı isteme izni
+
 jobs:
-  dbt-compile:
+  dbt-build:
     runs-on: ubuntu-latest
     env:
-      PROJECT_ID: ci_dummy
+      PROJECT_ID: ${{ vars.PROJECT_ID }}   # GitHub'daki repo değişkeni
     steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-    - name: Set up Python
-      uses: actions/setup-python@v7     # GitHub'ın resmi Python kurma adımı
-      with:                             # adıma verilen ayarlar
-        python-version: "3.10"          # lokal .venv'inle aynı sürüm
-        cache: pip                      # indirilen paketleri sakla, sonraki çalıştırmada oradan al
-    - name: Install dependincies
-      run: pip install -r requirements.txt
-    - name: dbt compile
-      run: dbt compile
-
-
-
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3            # kartı GCP'ye gösterip giriş dosyası üretir
+        with:
+          project_id: ${{ vars.PROJECT_ID }}
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: dbt build
+        run: dbt build --target ci                     # dbt_ci'ye kur + testleri çalıştır
