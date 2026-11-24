@@ -1,6 +1,6 @@
 import argparse                           # komut satırından --dry-run gibi seçenekleri okur
 import os                                 # os.environ için
-from datetime import datetime, timezone   # ingested_at zamanı için
+from datetime import datetime, timezone,timedelta   # ingested_at zamanı için
 
 import requests                           # API'ye istek atmak için
 from google.cloud import bigquery         # BigQuery'ye yazmak için
@@ -20,6 +20,7 @@ SCHEMA = [
 ]
 
 URL = "https://api.open-meteo.com/v1/forecast"   # adres artık bir sabit (eskiden requests.get'in içindeydi)
+HISTORY_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"   # aynı verinin geçmişi
 MAX_ATTEMPTS = 5                                  # en fazla kaç kez denensin
 RETRY_STATUS = {429, 500, 502, 503, 504}          # "geçici" saydığımız HTTP kodları (yukarıdaki tablo)
 
@@ -27,19 +28,18 @@ RETRY_STATUS = {429, 500, 502, 503, 504}          # "geçici" saydığımız HTT
 class TemporaryError(Exception):                  # kendi hata türümüz: "geçici, tekrar dene" etiketi
     """Tekrar denemeye değer bir hata (429, 5xx)."""
 
-def fetch(past_days):                             # past_days artık dışarıdan geliyor (bölüm c)
+def fetch(url,dates):                             # past_days artık dışarıdan geliyor (bölüm c)
     for attempt in range(1, MAX_ATTEMPTS + 1):    # attempt sırayla 1, 2, 3, 4, 5 olur
         try:                                      # "bu bloğu dene; hata çıkarsa except'e atla"
             resp = requests.get(
-                URL,
+                url,
                 params={
                     "latitude": LAT,
                     "longitude": LON,
                     "hourly": "temperature_2m",
-                    "past_days": past_days,       # eskiden sabit 1'di
-                    "forecast_days": 2,
+                    **dates,
                 },
-                timeout=30,                       # 30 sn cevap yoksa Timeout hatası
+                timeout=120,                       # 30 sn cevap yoksa Timeout hatası
             )
             if resp.status_code in RETRY_STATUS:  # 429 ya da 5xx geldiyse
                 raise TemporaryError(f"HTTP {resp.status_code}")   # "geçici" etiketiyle hata fırlat → except'e
@@ -85,11 +85,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # terminalde script adından sonra yazılan seçenekleri okuyacak bir okuyucu oluştur
 
+
     parser.add_argument("--dry-run", action="store_true")
     # "--dry-run" adında bir seçenek tanımla: yazıldıysa True, yazılmadıysa False
 
     parser.add_argument("--past-days", type=int, default=1)
     # "--past-days 5" yazılırsa args.past_days = 5 (type=int: yazıyı sayıya çevir); yazılmazsa 1
+
+    parser.add_argument("--start")
 
     args = parser.parse_args()
     # terminalde gerçekte ne yazıldığını oku → args.dry_run True ya da False olur
@@ -97,8 +100,12 @@ if __name__ == "__main__":
     ingested_at = datetime.now(timezone.utc).isoformat()
     # şu anki zaman (UTC), BİR KEZ, en başta → bu çalıştırmanın tüm satırlarına aynısı yazılacak
 
-    rows = to_rows(fetch(args.past_days), ingested_at)
-    # önce API'den veriyi al (fetch), sonra satırlara çevir (to_rows)
+    if args.start:                        # --start yazıldıysa: geçmişi çek
+        yesterday = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()   # dün, yazı olarak
+        payload = fetch(HISTORY_URL, {"start_date": args.start, "end_date": yesterday})
+    else:                                 # yazılmadıysa: her sabahki iş
+        payload = fetch(URL, {"past_days": args.past_days, "forecast_days": 2})
+    rows = to_rows(payload, ingested_at)
 
     if args.dry_run:
         # deneme modu: BigQuery'ye dokunma, sadece ekrana yaz
