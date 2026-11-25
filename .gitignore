@@ -7,3 +7,4 @@ dbt_packages/
 dbt_internal_packages/
 .user.yml
 .DS_Store
+artifacts/
